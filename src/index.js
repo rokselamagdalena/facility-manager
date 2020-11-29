@@ -2,16 +2,44 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import Signup from './components/Signup/Signup';
+import Login from './components/Login/Login';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter, Route } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
+import { createStore, applyMiddleware, compose } from 'redux';
+import rootReducer from './rootReducer';
+import setAuthorizationToken from './utils/setAuthorizationToken';
+import requireAuth from './utils/requireAuth';
+import jwtDecode from 'jwt-decode';
+import { setCurrentUser } from './actions/authActions';
+
+const store = createStore(
+  rootReducer,
+  compose(
+    applyMiddleware(thunk),
+    window.devToolsExtension ? window.devToolsExtension() : f => f
+  )
+);
+
+if (localStorage.jwtToken) {
+  setAuthorizationToken(localStorage.jwtToken);
+  store.dispatch(setCurrentUser(jwtDecode(localStorage.jwtToken)));
+}
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <Provider store={store}>
+    <React.StrictMode>
+      <BrowserRouter>
+        <Route path="/" component={App}></Route>
+        <Route path="/signup" component={Signup}></Route>
+        <Route path="/aaa" component={requireAuth(<div>aaa</div>)}></Route>
+        <Route path="/login" component={Login}></Route>
+      </BrowserRouter>
+    </React.StrictMode>
+  </Provider>,
   document.getElementById('root')
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
